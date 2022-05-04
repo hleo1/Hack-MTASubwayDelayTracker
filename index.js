@@ -1,5 +1,8 @@
+require('dotenv').config()
 const axios = require('axios');
 let current_delays = new Set();
+
+const api_key = process.env.API_KEY;
 
 const delay_start = new Map();
 const total_delay = new Map();
@@ -30,21 +33,21 @@ async function checkDelay() {
     try {
         const response = await axios.get('https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json', {
             headers: {
-                'x-api-key' : "pRzJ4zkf352aFKsVCT5kG822nilyLGUJ70OpGZWW"
+                'x-api-key' : api_key
             }
         });
         data = response.data.entity;
         time = response.data.header.timestamp;
-        // console.log(data);
 
         //still contains delays. this is alert dashboard
-        const filtered = data.filter(data => data.alert["transit_realtime.mercury_alert"].alert_type == "Delays" && (data.alert.active_period[0].end == undefined || time < data.alert.active_period[0].end));
-        // console.log(filtered);
+        const filtered = data.filter(data => data.alert["transit_realtime.mercury_alert"].alert_type == "Delays" && 
+        (data.alert.active_period[0].end == undefined || time < data.alert.active_period[0].end));
+
         filtered.forEach(element => {
             entities = element.alert.informed_entity;
             entities.forEach(el => {
                 if(el.route_id) {
-                    // console.log(el.route_id);
+
                     currently_delayed.add(el.route_id);
                 }
             })
@@ -59,19 +62,14 @@ async function checkDelay() {
 
 async function checkUpdates() {
     const new_delays = await checkDelay();
-    // new_delays.forEach((value) => {
-    //     console.log(value);
-    // });
+
     if(!setsAreEqual(new_delays, current_delays)) {
-        //compare set with current delays
-        /*things that 
+        /* it's not equal, only two ways they differ: (union/intersections)
         current_delays - new_delays = just finished repairing!
         new_delays - current_delays = just added to repair list! 
         */
         const repair_finish = setsAMinusB(current_delays, new_delays);
         const under_repair = setsAMinusB(new_delays, current_delays);
-
-        const today = new Date();
  
         repair_finish.forEach(el => {
             start = delay_start.get(el);
@@ -79,18 +77,20 @@ async function checkUpdates() {
             total_delay_time = total_time - start;
             prev_delay_time = (total_delay.has(el)) ? total_delay.get(el) : 0;
             total_delay.set(el, total_delay_time + prev_delay_time);
-            console.log("Line " + el + " is now recovered!" + " " + today);
+            console.log("Line " + el + " is now recovered!" );
         })
 
         under_repair.forEach(el => {
             delay_start.set(el, total_time);
-            console.log("Line " + el + " is experiencing delays"+ " " + today);
+            console.log("Line " + el + " is experiencing delays");
         })
         //set 'set' with current delays
         current_delays = new_delays;
     }
 }
 
+
+//check updates every 30 seconds
 checkUpdates();
 setInterval(async () => {
     total_time++;
@@ -98,6 +98,8 @@ setInterval(async () => {
 }, 30000);
 
 
+
+//simple REST API in express.js
 const express = require('express');
 const app = express()
 const port = 3001;
