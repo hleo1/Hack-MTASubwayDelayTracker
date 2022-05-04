@@ -1,6 +1,7 @@
 To Run:
 npm i
-node ./Subway.js
+
+node ./index.js
 
 Runs the instance of the service, keeps track of delays from MTA's api, updating every 30 seconds.
 Delay times should be in sync with https://new.mta.info/
