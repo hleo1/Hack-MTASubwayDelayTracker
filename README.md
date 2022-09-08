@@ -1,3 +1,7 @@
+#Skills#
+Node.js & Express.JS
+Interacting with external public API
+
 To Run:
 npm i
 add a .env file that looks like: 
