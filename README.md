@@ -1,7 +1,14 @@
 To Run:
 npm i
+add a .env file that looks like: 
+
+API_KEY = "{API-KEY}"
+
+Register and get an api-key at https://api.mta.info/#/signup
 
 node ./index.js
+
+
 
 Runs the instance of the service, keeps track of delays from MTA's api, updating every 30 seconds.
 Delay times should be in sync with https://new.mta.info/
